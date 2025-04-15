@@ -5,6 +5,17 @@ import { analyzeWallet, escapeMarkdown, createKeyboard } from './bot.js';
 import { getDetailedWalletInfo } from './solana.js';
 import 'dotenv/config';
 import { setDefaultResultOrder } from 'node:dns';
+const WEBHOOK_URL = process.env.WEBHOOK_URL || "https://telegram-bot-solana-g2sq.onrender.com"; 
+const PORT = process.env.PORT || 3000;
+
+// Set the Telegram webhook
+bot.telegram.setWebhook(`${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
+
+// Start the webhook on the same path
+bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
+
+console.log(`Bot is listening for webhooks on ${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
+
 
 setDefaultResultOrder('ipv4first');
 
@@ -161,7 +172,7 @@ bot.launch().then(() => {
 });
 
 // Create a simple HTTP server
-const PORT = process.env.PORT || 3000;
+// const PORT = process.env.PORT || 3000;
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('Bot is running');
