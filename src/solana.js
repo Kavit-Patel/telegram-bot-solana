@@ -2,10 +2,10 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import 'dotenv/config';
 
 
-const HELIUS_RPC = `https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`;
+const HELIUS_RPC = `${process.env.deploy=="mainnet"?`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`:`https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`}`;
 // const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`;
 const rpcConnection = new Connection(HELIUS_RPC, 'confirmed');
-
+console.log("HELIUS rpc ",HELIUS_RPC)
 export async function getDetailedWalletInfo(walletAddress) {
   try {
     const pubKey = new PublicKey(walletAddress);

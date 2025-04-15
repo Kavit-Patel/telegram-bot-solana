@@ -1,41 +1,39 @@
-
 import { Telegraf } from 'telegraf';
 import https from 'https';
+import http from 'http';
 import { analyzeWallet, escapeMarkdown, createKeyboard } from './bot.js';
 import { getDetailedWalletInfo } from './solana.js';
-
 import 'dotenv/config';
+import { setDefaultResultOrder } from 'node:dns';
 
-import { setDefaultResultOrder } from "node:dns";
-setDefaultResultOrder("ipv4first");
-
+setDefaultResultOrder('ipv4first');
 
 const bot = new Telegraf(process.env.BOT_TOKEN, {
   telegram: {
     agent: new https.Agent({
       keepAlive: true,
       keepAliveMsecs: 10000,
-    })
-  }
+    }),
+  },
 });
 
 // Command handlers
 bot.command('start', (ctx) => {
-  ctx.reply(`
-    Welcome ${escapeMarkdown(ctx.from.first_name)}! 
-    \nCommands::
-    /start - Initialize bot
-    /help - Show help menu
-    /about - Bot information
+  ctx.reply(
+    `Welcome ${escapeMarkdown(ctx.from.first_name)}! 
+\nCommands::
+/start - Initialize bot
+/help - Show help menu
+/about - Bot information
 
-    🚀Lets Start::
-    \nSend a Solana wallet address.
-  `);
+🚀Lets Start::
+\nSend a Solana wallet address.`
+  );
 });
 
 bot.command('help', (ctx) => {
-  ctx.replyWithMarkdownV2(escapeMarkdown(`
-*🤖 Bot Commands*
+  ctx.replyWithMarkdownV2(
+    escapeMarkdown(`*🤖 Bot Commands*
 
 /start - Initialize bot
 /help - Show help menu
@@ -46,27 +44,26 @@ bot.command('help', (ctx) => {
 - NFT portfolio analysis
 - Transaction history
 - Staking overview
-- Interactive dashboard
-  `));
+- Interactive dashboard`)
+  );
 });
 
 bot.command('about', (ctx) => {
-  ctx.replyWithMarkdownV2(escapeMarkdown(`
-*🌐 About This Bot*
+  ctx.replyWithMarkdownV2(
+    escapeMarkdown(`*🌐 About This Bot*
 
 Version: 2.1
 Network: Solana Devnet
 Data Providers:
   - Helius Hyperion API
-  - Solana Web3.js
-  `));
+  - Solana Web3.js`)
+  );
 });
-
 
 bot.on('text', async (ctx) => {
   const input = ctx.message.text.trim();
   const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-  
+
   if (solanaAddressRegex.test(input)) {
     await analyzeWallet(ctx, input);
   } else {
@@ -74,12 +71,8 @@ bot.on('text', async (ctx) => {
   }
 });
 
-
-
-
 bot.action(/^(tokens|nfts|txs|value|refresh)_(.+)$/, async (ctx) => {
   try {
-
     const action = ctx.match[1];
     const walletAddress = ctx.match[2];
 
@@ -96,43 +89,49 @@ bot.action(/^(tokens|nfts|txs|value|refresh)_(.+)$/, async (ctx) => {
 
     switch (action) {
       case 'tokens':
-        response = `📊 *Token Breakdown*\n\n` +
-                   `🪙 Fungible \\: ${escapeMarkdown(data.tokens.fungible)}\n` +
-                   `🖼 NFTs \\: ${escapeMarkdown(data.tokens.nfts)}`;
+        response =
+          `📊 *Token Breakdown*\n\n` +
+          `🪙 Fungible \\: ${escapeMarkdown(data.tokens.fungible)}\n` +
+          `🖼 NFTs \\: ${escapeMarkdown(data.tokens.nfts)}`;
         break;
       case 'nfts':
-        response = `🖼 *NFT Collection*\n\n` +
-                   `Total Items \\: ${escapeMarkdown(data.tokens.nfts)}\n` +
-                   `Estimated Value \\: Coming Soon 🔄`;
+        response =
+          `🖼 *NFT Collection*\n\n` +
+          `Total Items \\: ${escapeMarkdown(data.tokens.nfts)}\n` +
+          `Estimated Value \\: Coming Soon 🔄`;
         break;
       case 'txs':
         const txs = data.recentTransactions
           .slice(0, 5)
-          .map((tx, index) => 
-            `${index + 1}\\. ⌛ ${escapeMarkdown(new Date(tx.blockTime * 1000).toLocaleDateString())} \\- ` +
-            `${escapeMarkdown(tx.signature.substring(0, 8))}\\.\\.\\.`)
+          .map(
+            (tx, index) =>
+              `${index + 1}\\. ⌛ ${escapeMarkdown(
+                new Date(tx.blockTime * 1000).toLocaleDateString()
+              )} \\- ${escapeMarkdown(tx.signature.substring(0, 8))}\\.\\.\\.`
+          )
           .join('\n');
         response = `📜 *Recent Transactions*\n\n${txs || 'No recent transactions'}`;
         break;
       case 'value':
-        response = `💹 *Portfolio Valuation*\n\n` +
-                    escapeMarkdown(`This feature is under active development 🛠`) + 
-                    `\n` +
-                    escapeMarkdown(`Check back next week for updates!`);
+        response =
+          `💹 *Portfolio Valuation*\n\n` +
+          escapeMarkdown(`This feature is under active development 🛠`) +
+          `\n` +
+          escapeMarkdown(`Check back next week for updates!`);
         break;
       case 'refresh':
         const freshData = await getDetailedWalletInfo(walletAddress);
         response = `
-        🔍 *Wallet Analysis* 🔍
-        \`${escapeMarkdown(walletAddress)}\`
-        
-        *◎ SOL Balance* \\: ${escapeMarkdown(freshData.solBalance)}
-        *🪙 Total Tokens* \\: ${escapeMarkdown(freshData.tokens.total)}
-        ├─ Fungible \\: ${escapeMarkdown(freshData.tokens.fungible)}
-        └─ NFTs \\: ${escapeMarkdown(freshData.tokens.nfts)}
-        *🔒 Staked Accounts* \\: ${escapeMarkdown(freshData.stakeAccounts)}
-        *📆 Recent Activity* \\: ${escapeMarkdown(freshData.recentTransactions.length)} TXs \\(Last 5\\)
-        Updated at \\: ${escapeMarkdown(new Date().toUTCString())}
+🔍 *Wallet Analysis* 🔍
+\`${escapeMarkdown(walletAddress)}\`
+
+*◎ SOL Balance* \\: ${escapeMarkdown(freshData.solBalance)}
+*🪙 Total Tokens* \\: ${escapeMarkdown(freshData.tokens.total)}
+├─ Fungible \\: ${escapeMarkdown(freshData.tokens.fungible)}
+└─ NFTs \\: ${escapeMarkdown(freshData.tokens.nfts)}
+*🔒 Staked Accounts* \\: ${escapeMarkdown(freshData.stakeAccounts)}
+*📆 Recent Activity* \\: ${escapeMarkdown(freshData.recentTransactions.length)} TXs \\(Last 5\\)
+Updated at \\: ${escapeMarkdown(new Date().toUTCString())}
         `.trim().replace(/ +/g, ' ');
         break;
       default:
@@ -141,9 +140,8 @@ bot.action(/^(tokens|nfts|txs|value|refresh)_(.+)$/, async (ctx) => {
 
     await ctx.editMessageText(response, {
       parse_mode: 'MarkdownV2',
-      reply_markup: createKeyboard(walletAddress)
+      reply_markup: createKeyboard(walletAddress),
     });
-    
   } catch (err) {
     console.error('Callback Error:', err);
     await ctx.answerCbQuery('⚠️ Error processing request');
@@ -157,8 +155,31 @@ bot.catch((err, ctx) => {
   }
 });
 
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// Launch the bot
+bot.launch().then(() => {
+  console.log('🤖 Bot activated');
+});
 
-bot.launch();
-console.log('🤖 Bot activated');
+// Create a simple HTTP server
+const PORT = process.env.PORT || 3000;
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running');
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});
+
+// Graceful shutdown
+const shutdown = () => {
+  console.log('\nShutting down gracefully...');
+  bot.stop('SIGTERM');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+};
+
+process.once('SIGINT', shutdown);
+process.once('SIGTERM', shutdown);
