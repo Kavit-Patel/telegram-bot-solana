@@ -169,21 +169,21 @@ bot.launch().then(() => {
 
 // Create a simple HTTP server
 // const PORT = process.env.PORT || 3000;
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Bot is running');
-});
+// const server = http.createServer((req, res) => {
+//   res.writeHead(200, { 'Content-Type': 'text/plain' });
+//   res.end('Bot is running');
+// });
 
-server.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-});
+// server.listen(PORT, () => {
+//   console.log(`Server is listening on port ${PORT}`);
+// });
 
 // Graceful shutdown
 const shutdown = () => {
   console.log('\nShutting down gracefully...');
   bot.stop('SIGTERM');
   server.close(() => {
-    console.log('HTTP server closed');
+    console.log('server closed');
     process.exit(0);
   });
 };
