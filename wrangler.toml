@@ -1,0 +1,4 @@
+name = "tbot"
+main = "src/index.js"
+type = "javascript"
+compatibility_date = "2025-04-15"
