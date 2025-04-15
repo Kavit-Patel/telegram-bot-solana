@@ -8,15 +8,6 @@ import { setDefaultResultOrder } from 'node:dns';
 const WEBHOOK_URL = process.env.WEBHOOK_URL || "https://telegram-bot-solana-g2sq.onrender.com"; 
 const PORT = process.env.PORT || 3000;
 
-// Set the Telegram webhook
-bot.telegram.setWebhook(`${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
-
-// Start the webhook on the same path
-bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
-
-console.log(`Bot is listening for webhooks on ${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
-
-
 setDefaultResultOrder('ipv4first');
 
 const bot = new Telegraf(process.env.BOT_TOKEN, {
@@ -28,7 +19,12 @@ const bot = new Telegraf(process.env.BOT_TOKEN, {
   },
 });
 
-// Command handlers
+bot.telegram.setWebhook(`${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
+
+bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
+
+console.log(`Bot is listening for webhooks on ${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
+
 bot.command('start', (ctx) => {
   ctx.reply(
     `Welcome ${escapeMarkdown(ctx.from.first_name)}! 
