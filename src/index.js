@@ -108,7 +108,6 @@ bot.action(/^track_confirm_(.+)$/, async (ctx) => {
   try {
     const trackedWallet = ctx.match[1];
     const userId = ctx.from.id;
-    console.log("tracking - ", trackedWallet);
     
     await updateUser(userId, {
       copyTarget: trackedWallet,
@@ -202,7 +201,8 @@ bot.catch((err, ctx) => {
     ctx.answerCbQuery('⚠️ Service unavailable. Try again later.');
   }
 });
-// bot.launch().then(()=>{console.log("Bot activated locally !")});
+// bot.launch();
+// console.log("Bot Activated locally !");
 bot.launch({
   webhook: {
     domain: WEBHOOK_URL,

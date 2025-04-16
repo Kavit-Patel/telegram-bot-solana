@@ -1,11 +1,15 @@
 {
   "users": {
     "1216194787": {
-      "stateTimestamp": "2025-04-16T05:25:04.662Z",
-      "copyTarget": "FLU7P6HQxuiYryraqNyjUj4Vb3GvNT7RQvqjXogDhgnp",
+      "stateTimestamp": "2025-04-16T11:48:45.805Z",
+      "copyTarget": "GYfELe3Br6jwHiKc9hAQfHWTVpYhKizhuxxocczaJGDj",
       "status": "active",
-      "createdAt": "2025-04-16T05:25:08.938Z"
+      "createdAt": "2025-04-16T11:48:57.414Z",
+      "subscriptionId": 0
     }
   },
-  "transactions": {}
+  "transactions": {
+    "4KjVt7w4Ci8jRCZYLbhHvmvE6tbvUEziwTWDr4ChNuLjxduqBvQJBmYbECKaGvXeV7pf4BCRKAWgk9zJtcSupP7X": true,
+    "4GcCigcAsTL1GSY3DrxXiRJqdjR3cjHHVgooADPxuvHmuqeTsMj5apVQUisMS8XniwKThFrnbfKTDxC988M2P4sD": true
+  }
 }
