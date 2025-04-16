@@ -1,6 +1,5 @@
 import { Telegraf } from 'telegraf';
 import https from 'https';
-import http from 'http';
 import { analyzeWallet, escapeMarkdown, createKeyboard, subKeyTrackWallet } from './bot.js';
 import { getDetailedWalletInfo } from './solana.js';
 import 'dotenv/config';
@@ -8,7 +7,7 @@ import { setDefaultResultOrder } from 'node:dns';
 import fs from 'fs';
 import { subscribeToTrackWallet } from './helper.js';
 import { clearUserState, getUser, setUserState, updateUser } from './database.js';
-const WEBHOOK_URL = process.env.WEBHOOK_URL ; 
+const WEBHOOK_URL = process.env.WEBHOOK_URL; 
 const PORT = process.env.PORT || 3000;
 
 setDefaultResultOrder('ipv4first');
@@ -22,22 +21,17 @@ export const bot = new Telegraf(process.env.BOT_TOKEN, {
   },
 });
 
-bot.telegram.setWebhook(`${WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`);
-
-bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
-
-console.log(`Bot is listening through webhook `);
-
 bot.command('start', (ctx) => {
   ctx.reply(
     `Welcome ${escapeMarkdown(ctx.from.first_name)}! 
-\nCommands::
-/start - Initialize bot
-/help - Show help menu
-/about - Bot information
+    
+Commands:
+  /start - Initialize bot
+  /help - Show help menu
+  /about - Bot information
 
-🚀Lets Start::
-\nSend a Solana wallet address.`
+🚀 Let's Start:
+Send a Solana wallet address.`
   );
 });
 
@@ -72,113 +66,75 @@ Data Providers:
 
 bot.on('text', async (ctx) => {
   const input = ctx.message.text.trim();
-  const userId= ctx.from.id;
+  const userId = ctx.from.id;
   const user = getUser(userId);
   const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-  // let dbContent;
-  // let currentUserStatus;
-  // try {
-  //   console.log("USER ID ",userId);
-  //   dbContent = JSON.parse(fs.readFileSync("./db.json","utf8"));
-  //   // currentUserStatus = dbContent[users][userId];
-  //   currentUserStatus = dbContent.users[userId];
-  // } catch (error) {
-  //   console.log("First one !")
-  // }
-if(user?.state=="awaiting_copy_target"){
-  
-  if(solanaAddressRegex.test(input)) {
-    await clearUserState(userId);
-    // dbContent.users[userId] = "";
-    // fs.writeFileSync("./db.json",JSON.stringify(dbContent),"utf8");
-    
-    await ctx.replyWithMarkdownV2(
-      `Confirm tracking :\n\`${escapeMarkdown(input)}\``,
-      {
-        reply_markup:subKeyTrackWallet(input)
-      }
-    )
-  
-  }else{
-    await ctx.reply(`⚠️ Invalid address. Please enter a valid Solana wallet:`);
+
+  if (user?.state === "awaiting_copy_target") {
+    if (solanaAddressRegex.test(input)) {
+      await clearUserState(userId);
+      await ctx.replyWithMarkdownV2(
+        `Confirm tracking :\n\`${escapeMarkdown(input)}\``,
+        {
+          reply_markup: subKeyTrackWallet(input)
+        }
+      );
+    } else {
+      await ctx.reply(`⚠️ Invalid address. Please enter a valid Solana wallet:`);
+    }
+    return;
   }
-  return ;
- 
-}
-if (solanaAddressRegex.test(input)) {
-  await analyzeWallet(ctx, input);
-} else {
-  await ctx.reply('⚠️ Invalid Solana address format');
-}
-  
+
+  if (solanaAddressRegex.test(input)) {
+    await analyzeWallet(ctx, input);
+  } else {
+    await ctx.reply('⚠️ Invalid Solana address format');
+  }
 });
 
 bot.action('livetrack_init', async (ctx) => {
-  let dbContent;
- 
   try {
-    // try {
-    //   const fileContent = fs.readFileSync("./db.json","utf8");
-    //   dbContent = JSON.parse(fileContent);
-    // } catch (error) {
-    //   dbContent = {users:{},transactions:{}};
-    //   dbContent = fs.writeFileSync("./db.json",JSON.stringify(dbContent,null,2),"utf8")
-    // }
-
     await ctx.answerCbQuery();
-    await ctx.replyWithMarkdownV2(escapeMarkdown(
-      'Please enter the Solana wallet address you want to track :'
-    ));
-    await setUserState(ctx.from.id,"awaiting_copy_target");
-
-    // const userId = ctx.from.id;
-    // dbContent.users[userId]="awaiting_track";
-
-    // fs.writeFileSync("./db.json",JSON.stringify(dbContent,null,2),"utf8");
-
+    await ctx.replyWithMarkdownV2(
+      escapeMarkdown('Please enter the Solana wallet address you want to track:')
+    );
+    await setUserState(ctx.from.id, "awaiting_copy_target");
   } catch (err) {
-    console.error('Track wallet error :', err);
+    console.error('Track wallet error:', err);
     await ctx.answerCbQuery('⚠️ Error starting wallet track');
   }
 });
 bot.action(/^track_confirm_(.+)$/, async (ctx) => {
-try {
-    // let dbContent;
+  try {
     const trackedWallet = ctx.match[1];
     const userId = ctx.from.id;
-    console.log("tracking - ",trackedWallet);
-  
-    await updateUser(userId,{copyTarget:trackedWallet,status:'active',createdAt:new Date().toISOString()});
-  
-    // try {
-    //   dbContent = JSON.parse(fs.readFileSync("./db.json","utf8"))
-    // } catch (error) {
-    //   console.log("track_confirm cannot access db")
-    // }
-    // dbContent.users[userId]="tracking";
-  
-    await subscribeToTrackWallet(userId,trackedWallet);
+    console.log("tracking - ", trackedWallet);
+    
+    await updateUser(userId, {
+      copyTarget: trackedWallet,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    });
+    
+    await subscribeToTrackWallet(userId, trackedWallet);
     await ctx.editMessageText(
       `✅ Now copying trades from:\n\`${trackedWallet}\``,
       { parse_mode: 'MarkdownV2' }
     );
-} catch (error) {
-    console.log("track_confirm error ",err);
+  } catch (err) {
+    console.error("track_confirm error:", err);
     await ctx.answerCbQuery("⚠️ Confirmation failed");
-}
-
+  }
 });
 
 bot.action(/^(tokens|nfts|txs|value|refresh)_(.+)$/, async (ctx) => {
   try {
     const action = ctx.match[1];
     const walletAddress = ctx.match[2];
-
     const solanaAddressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
     if (!walletAddress || !solanaAddressRegex.test(walletAddress)) {
       return ctx.answerCbQuery('⚠️ Invalid wallet address in callback');
     }
-
     await ctx.answerCbQuery();
     await ctx.sendChatAction('typing');
 
@@ -201,12 +157,8 @@ bot.action(/^(tokens|nfts|txs|value|refresh)_(.+)$/, async (ctx) => {
       case 'txs':
         const txs = data.recentTransactions
           .slice(0, 5)
-          .map(
-            (tx, index) =>
-              `${index + 1}\\. ⌛ ${escapeMarkdown(
-                new Date(tx.blockTime * 1000).toLocaleDateString()
-              )} \\- ${escapeMarkdown(tx.signature.substring(0, 8))}\\.\\.\\.`
-          )
+          .map((tx, index) =>
+            `${index + 1}\\. ⌛ ${escapeMarkdown(new Date(tx.blockTime * 1000).toLocaleDateString())} \\- ${escapeMarkdown(tx.signature.substring(0, 8))}\\.\\.\\.`)
           .join('\n');
         response = `📜 *Recent Transactions*\n\n${txs || 'No recent transactions'}`;
         break;
@@ -219,18 +171,16 @@ bot.action(/^(tokens|nfts|txs|value|refresh)_(.+)$/, async (ctx) => {
         break;
       case 'refresh':
         const freshData = await getDetailedWalletInfo(walletAddress);
-        response = `
-🔍 *Wallet Analysis* 🔍
-\`${escapeMarkdown(walletAddress)}\`
-
-*◎ SOL Balance* \\: ${escapeMarkdown(freshData.solBalance)}
-*🪙 Total Tokens* \\: ${escapeMarkdown(freshData.tokens.total)}
-├─ Fungible \\: ${escapeMarkdown(freshData.tokens.fungible)}
-└─ NFTs \\: ${escapeMarkdown(freshData.tokens.nfts)}
-*🔒 Staked Accounts* \\: ${escapeMarkdown(freshData.stakeAccounts)}
-*📆 Recent Activity* \\: ${escapeMarkdown(freshData.recentTransactions.length)} TXs \\(Last 5\\)
-Updated at \\: ${escapeMarkdown(new Date().toUTCString())}
-        `.trim().replace(/ +/g, ' ');
+        response =
+          `🔍 *Wallet Analysis* 🔍\n` +
+          `\`${escapeMarkdown(walletAddress)}\`\n\n` +
+          `*◎ SOL Balance* \\: ${escapeMarkdown(freshData.solBalance)}\n` +
+          `*🪙 Total Tokens* \\: ${escapeMarkdown(freshData.tokens.total)}\n` +
+          `├─ Fungible \\: ${escapeMarkdown(freshData.tokens.fungible)}\n` +
+          `└─ NFTs \\: ${escapeMarkdown(freshData.tokens.nfts)}\n` +
+          `*🔒 Staked Accounts* \\: ${escapeMarkdown(freshData.stakeAccounts)}\n` +
+          `*📆 Recent Activity* \\: ${escapeMarkdown(freshData.recentTransactions.length)} TXs \\(Last 5\\)\n` +
+          `Updated at \\: ${escapeMarkdown(new Date().toUTCString())}`;
         break;
       default:
         response = '⚠️ Unknown action';
@@ -248,33 +198,25 @@ Updated at \\: ${escapeMarkdown(new Date().toUTCString())}
 
 bot.catch((err, ctx) => {
   console.error(`Global Error: ${err.message}`);
-  if (ctx.update.callback_query) {
+  if (ctx && ctx.update && ctx.update.callback_query) {
     ctx.answerCbQuery('⚠️ Service unavailable. Try again later.');
   }
 });
 
-// Launch the bot
-// bot.launch().then(() => {
-//   console.log('🤖 Bot activated');
-// });
+bot.launch({
+  webhook: {
+    domain: WEBHOOK_URL,
+    hookPath: `/bot${process.env.BOT_TOKEN}`,
+    port: PORT,
+  }
+}).then(() => {
+  console.log(`Bot is listening through webhook `);
+});
 
-
-// const server = http.createServer((req, res) => {
-//   res.writeHead(200, { 'Content-Type': 'text/plain' });
-//   res.end('Bot is running');
-// });
-// server.listen(PORT, () => {
-//   console.log(`Server is listening on port ${PORT}`);
-// });
-
-// Graceful shutdown
-const shutdown = () => {
+const shutdown = async () => {
   console.log('\nShutting down gracefully...');
   bot.stop('SIGTERM');
-  // server.close(() => {
-  //   console.log('server closed');
-  //   process.exit(0);
-  // });
+  process.exit(0);
 };
 
 process.once('SIGINT', shutdown);
