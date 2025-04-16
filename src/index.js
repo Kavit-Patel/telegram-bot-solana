@@ -202,7 +202,7 @@ bot.catch((err, ctx) => {
     ctx.answerCbQuery('⚠️ Service unavailable. Try again later.');
   }
 });
-
+// bot.launch().then(()=>{console.log("Bot activated locally !")});
 bot.launch({
   webhook: {
     domain: WEBHOOK_URL,
