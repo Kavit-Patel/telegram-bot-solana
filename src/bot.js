@@ -16,9 +16,23 @@ export function createKeyboard(walletAddress) {
         { text: '💹 Portfolio Value', callback_data: `value_${walletAddress}` }
       ],
       [
+        { text: '🔄 Refresh Data', callback_data: `refresh_${walletAddress}` },
+        { text: '🔁 Track Other Wallet',  callback_data: 'livetrack_init' }
+      ]
+    ]
+  };
+}
+export function subKeyTrackWallet(targetWallet) {
+  return {
+    inline_keyboard: [
+      [
         { 
-          text: '🔄 Refresh Data', 
-          callback_data: `refresh_${walletAddress}`,
+          text: '✅ Confirm', 
+          callback_data: `track_confirm_${targetWallet}`
+        },
+        { 
+          text: '❌ Cancel', 
+          callback_data: 'track_cancel'
         }
       ]
     ]

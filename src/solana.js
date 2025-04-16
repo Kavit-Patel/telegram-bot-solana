@@ -4,7 +4,7 @@ import 'dotenv/config';
 
 const HELIUS_RPC = `${process.env.DEPLOY=="mainnet"?`https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`:`https://devnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`}`;
 // const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_KEY}`;
-const rpcConnection = new Connection(HELIUS_RPC, 'confirmed');
+export const rpcConnection = new Connection(HELIUS_RPC, 'confirmed');
 
 export async function getDetailedWalletInfo(walletAddress) {
   try {
